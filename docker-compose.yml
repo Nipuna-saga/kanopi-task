@@ -1,0 +1,49 @@
+version: "3.7"
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - "./frontend:/app"
+      # - "/app/node_modules"
+    ports:
+      - 3001:3000
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_BACKEND_URL=http://localhost:8000
+      - REACT_APP_FRONTEND_URL=http://localhost:3001
+
+    stdin_open: true
+
+  db:
+    image: mysql:5.7
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: "my-app-db"
+      MYSQL_PASSWORD: "password"
+      MYSQL_ROOT_PASSWORD: "password"
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend:/code
+      - ~/.aws:/root/.aws
+    ports:
+      - "8000:8000"
+    environment:
+      - REACT_APP_BACKEND_URL=http://localhost:8000
+      - REACT_APP_FRONTEND_URL=http://localhost:3001
+      - MYSQL_DATABASE=my-app-db
+      - MYSQL_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_USER=root
+      - MYSQL_HOST=db
+      - SECRET_KEY=d6wmBs1Hr7Ck%BL2eCjvG71#
+      - DEBUG_MODE=true
+    depends_on:
+      - db
